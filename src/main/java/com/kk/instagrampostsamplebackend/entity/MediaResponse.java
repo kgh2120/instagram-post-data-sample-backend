@@ -26,6 +26,10 @@ public class MediaResponse {
         private String id;
         private String media_url;
         private String media_type;
+
+        public Media toEntity(){
+            return new Media(id, media_url, media_type);
+        }
     }
 
     @Data
