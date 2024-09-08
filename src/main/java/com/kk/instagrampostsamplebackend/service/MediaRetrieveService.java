@@ -1,40 +1,33 @@
-package com.kk.instagrampostsamplebackend;
+package com.kk.instagrampostsamplebackend.service;
 
 import com.kk.instagrampostsamplebackend.entity.MediaResponse;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.env.Environment;
+import com.kk.instagrampostsamplebackend.repository.MediaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+@RequiredArgsConstructor
+@Service
+public class MediaRetrieveService {
 
-@SpringBootTest
-class InstagramPostSampleBackendApplicationTests {
-
-    @Autowired
-    Environment env;
-
-    @Test
-    void contextLoads() {
-    }
+    @Value("${insta.token}")
+    private String accessToken;
+    private final MediaRepository mediaRepository;
 
 
     public static final String MEDIA_RETRIEVE_BASE_URL = "https://graph.instagram.com/me/media?";
 
 
-    @Test
+
     public void retrieveMedia(){
 
 
-        final String accessToken = env.getProperty("insta.token");
-
         RestClient restClient = RestClient.create();
-
 
         final String fields = "fields=id,media_url,media_type";
 
@@ -42,9 +35,10 @@ class InstagramPostSampleBackendApplicationTests {
         String uri = sb.append(fields).append("&")
                 .append("access_token=").append(accessToken)
                 .append("&")
-                .append("limit=5")
+                .append("limit=20")
                 .toString();
 
+        // TODO limit 개수 줄이고 DB에 있으면 저장하고 아님 말고 처음엔 좀 손해같긴 한데, 한두번 하고나면, 네트워크 IO 줄일 수 있어서 좋을지도? 적당히 설정해보자.
 
         ResponseEntity<MediaResponse> entity = restClient.get()
                 .uri(uri)
@@ -54,9 +48,13 @@ class InstagramPostSampleBackendApplicationTests {
         MediaResponse body = entity.getBody();
 
 
+        for(MediaResponse.MediaData md : body.getData()){
+            if(mediaRepository.existsById(md.getId())){
+                return;
+            }
+            mediaRepository.save(md.toEntity());
+        }
 
-        assert body != null;
-        List<MediaResponse.MediaData> datas = new ArrayList<>(body.getData());
 
         while (body.getPaging() != null && body.getPaging().getNext() != null) {
             String next = body.getPaging().getNext();
@@ -65,13 +63,17 @@ class InstagramPostSampleBackendApplicationTests {
                     .retrieve()
                     .toEntity(MediaResponse.class)
                     .getBody();
-            assert bb != null;
-            datas.addAll(bb.getData());
             body = bb;
+
+            for(MediaResponse.MediaData md : body.getData()){
+                if(mediaRepository.existsById(md.getId())){
+                    return;
+                }
+                mediaRepository.save(md.toEntity());
+            }
         }
 
-        assertThat(datas.size()).isEqualTo(28); // 테스트 계정의 게시글 수랑 동일한지 체크해주시요
-
     }
+
 
 }
