@@ -1,5 +1,7 @@
 package com.kk.instagrampostsamplebackend.service;
 
+import com.kk.instagrampostsamplebackend.dto.PhotoRetrieveResponse;
+import com.kk.instagrampostsamplebackend.entity.Media;
 import com.kk.instagrampostsamplebackend.entity.MediaResponse;
 import com.kk.instagrampostsamplebackend.repository.MediaRepository;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -23,8 +24,14 @@ public class MediaRetrieveService {
     public static final String MEDIA_RETRIEVE_BASE_URL = "https://graph.instagram.com/me/media?";
 
 
+    public List<PhotoRetrieveResponse> retrieveMedia() {
+        return mediaRepository.findAll()
+                .stream()
+                .map(PhotoRetrieveResponse::fromEntity)
+                .toList();
+    }
 
-    public void retrieveMedia(){
+    public void retrieveFromInstagram() {
 
 
         RestClient restClient = RestClient.create();
@@ -48,8 +55,8 @@ public class MediaRetrieveService {
         MediaResponse body = entity.getBody();
 
 
-        for(MediaResponse.MediaData md : body.getData()){
-            if(mediaRepository.existsById(md.getId())){
+        for (MediaResponse.MediaData md : body.getData()) {
+            if (mediaRepository.existsById(md.getId())) {
                 return;
             }
             mediaRepository.save(md.toEntity());
@@ -65,8 +72,8 @@ public class MediaRetrieveService {
                     .getBody();
             body = bb;
 
-            for(MediaResponse.MediaData md : body.getData()){
-                if(mediaRepository.existsById(md.getId())){
+            for (MediaResponse.MediaData md : body.getData()) {
+                if (mediaRepository.existsById(md.getId())) {
                     return;
                 }
                 mediaRepository.save(md.toEntity());
