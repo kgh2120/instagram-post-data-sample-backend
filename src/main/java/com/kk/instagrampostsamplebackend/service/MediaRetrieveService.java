@@ -1,16 +1,20 @@
 package com.kk.instagrampostsamplebackend.service;
 
+import com.kk.instagrampostsamplebackend.dto.PhotoRetrieveResponse;
+import com.kk.instagrampostsamplebackend.entity.Media;
 import com.kk.instagrampostsamplebackend.entity.MediaResponse;
 import com.kk.instagrampostsamplebackend.repository.MediaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class MediaRetrieveService {
@@ -23,8 +27,17 @@ public class MediaRetrieveService {
     public static final String MEDIA_RETRIEVE_BASE_URL = "https://graph.instagram.com/me/media?";
 
 
+    public List<PhotoRetrieveResponse> retrieveMedia() {
+        return mediaRepository.findAll()
+                .stream()
+                .map(PhotoRetrieveResponse::fromEntity)
+                .toList();
+    }
 
-    public void retrieveMedia(){
+    @Scheduled(cron = "0 * * * * ?")
+    public void retrieveFromInstagram() {
+
+        log.info("긁어갑니다~");
 
 
         RestClient restClient = RestClient.create();
@@ -48,8 +61,8 @@ public class MediaRetrieveService {
         MediaResponse body = entity.getBody();
 
 
-        for(MediaResponse.MediaData md : body.getData()){
-            if(mediaRepository.existsById(md.getId())){
+        for (MediaResponse.MediaData md : body.getData()) {
+            if (mediaRepository.existsById(md.getId())) {
                 return;
             }
             mediaRepository.save(md.toEntity());
@@ -65,8 +78,8 @@ public class MediaRetrieveService {
                     .getBody();
             body = bb;
 
-            for(MediaResponse.MediaData md : body.getData()){
-                if(mediaRepository.existsById(md.getId())){
+            for (MediaResponse.MediaData md : body.getData()) {
+                if (mediaRepository.existsById(md.getId())) {
                     return;
                 }
                 mediaRepository.save(md.toEntity());

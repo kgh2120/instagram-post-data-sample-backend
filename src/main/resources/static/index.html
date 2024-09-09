@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>하이</title>
+</head>
+<body>
+
+    <div id="container">
+        <button class="instagram_load_btn">딸깍</button>
+        <div class="image_wrapper"></div>
+    </div>
+</body>
+<script>
+
+    const btn = document.querySelector(".instagram_load_btn");
+    const wrapper = document.querySelector(".image_wrapper");
+
+    function init(){
+        btn.addEventListener('click', async () => {
+            fetch("/photos")
+                .then(r => {
+                    console.log(r)
+                    return r.json();
+                })
+                .then(json => {
+                    console.log(json);
+
+                    for(let data of json){
+                        // const div = document.createElement("div");
+                        // const h3 = document.createElement("h3");
+                        const img = document.createElement("img");
+                        img.setAttribute("src", data?.mediaUrl);
+                        img.setAttribute("width", "300")
+                        // h3.innerText = data?.id;
+                        // div.append(h3);
+                        // div.append(img);
+                        wrapper.append(img);
+                    }
+
+                }).catch(err => console.error(err));
+        })
+    }
+
+    init();
+
+
+
+</script>
+</html>
