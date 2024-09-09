@@ -5,13 +5,16 @@ import com.kk.instagrampostsamplebackend.entity.Media;
 import com.kk.instagrampostsamplebackend.entity.MediaResponse;
 import com.kk.instagrampostsamplebackend.repository.MediaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class MediaRetrieveService {
@@ -31,7 +34,10 @@ public class MediaRetrieveService {
                 .toList();
     }
 
+    @Scheduled(cron = "0 * * * * ?")
     public void retrieveFromInstagram() {
+
+        log.info("긁어갑니다~");
 
 
         RestClient restClient = RestClient.create();
